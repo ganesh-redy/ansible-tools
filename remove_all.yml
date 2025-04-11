@@ -1,0 +1,83 @@
+---
+- hosts: 34.44.67.249
+  become: true
+  tasks:
+
+    - name: Uninstall system utilities (excluding critical packages)
+      yum:
+        name:
+          - git
+        state: absent
+
+    - name: Uninstall Ansible
+      yum:
+        name: ansible
+        state: absent
+
+    - name: Uninstall Docker
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: absent
+
+    - name: Remove Docker repository
+      file:
+        path: /etc/yum.repos.d/docker-ce.repo
+        state: absent
+
+    - name: Uninstall Java (for Jenkins)
+      yum:
+        name: java-17-openjdk
+        state: absent
+
+    - name: Uninstall Jenkins
+      yum:
+        name: jenkins
+        state: absent
+
+    - name: Remove Jenkins repository
+      file:
+        path: /etc/yum.repos.d/jenkins.repo
+        state: absent
+
+    - name: Uninstall Google Cloud SDK
+      yum:
+        name: google-cloud-cli
+        state: absent
+
+    - name: Remove Google Cloud SDK repository
+      file:
+        path: /etc/yum.repos.d/google-cloud-sdk.repo
+        state: absent
+
+    - name: Uninstall Terraform
+      yum:
+        name: terraform
+        state: absent
+
+    - name: Remove Terraform repository
+      file:
+        path: /etc/yum.repos.d/hashicorp.repo
+        state: absent
+
+    - name: Remove kubectl binary
+      file:
+        path: /usr/local/bin/kubectl
+        state: absent
+
+    - name: Remove workspace directory
+      file:
+        path: /root/workspace
+        state: absent
+
+    - name: Clean up yum cache
+      command: yum clean all
+
+    - name: Remove orphaned dependencies
+      command: yum autoremove -y
+
+    - name: Reload system profile to apply changes
+      shell: source /etc/profile
+

@@ -1,0 +1,107 @@
+---
+- hosts: 34.44.67.249
+  become: true
+  tasks:
+
+    - name: Install essential system utilities
+      yum:
+        name:
+          - yum-utils
+          - wget
+          - git
+          - python3
+          - python3-pip
+          - epel-release  # Required for Ansible
+        state: present
+
+    - name: Install Ansible
+      yum:
+        name: ansible
+        state: present
+
+    - name: Add Docker repository
+      shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install Docker
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Java (for Jenkins)
+      yum:
+        name: java-17-openjdk
+        state: present
+
+    - name: Add Jenkins repository
+      shell: |
+        wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+      args:
+        creates: /etc/yum.repos.d/jenkins.repo
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Start and enable Jenkins
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Add Google Cloud CLI repository
+      shell: |
+        tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
+        [google-cloud-cli]
+        name=Google Cloud CLI
+        baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64
+        enabled=1
+        gpgcheck=1
+        repo_gpgcheck=0
+        gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        EOM
+      args:
+        creates: /etc/yum.repos.d/google-cloud-sdk.repo
+
+    - name: Install Google Cloud SDK
+      yum:
+        name: 
+          - google-cloud-cli
+          - google-cloud-sdk-gke-gcloud-auth-plugin
+
+        state: present
+
+    - name: Add Terraform repository
+      shell: yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+      args:
+        creates: /etc/yum.repos.d/hashicorp.repo
+
+    - name: Install Terraform
+      yum:
+        name: terraform
+        state: present
+
+    - name: Install kubectl from official URL
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        echo 'export PATH=$PATH:/usr/local/bin' >> /etc/profile
+      args:
+        creates: /usr/local/bin/kubectl
+    - name: create a workspace1
+      file:
+        name: /root/workspace
+        state: directory
+
